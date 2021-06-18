@@ -1,0 +1,19 @@
+{
+	"name": "blessedbotv2",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index",
+		"dev": "nodemon index"
+	},
+	"keywords": [],
+	"author": "Boidushya",
+	"license": "ISC",
+	"dependencies": {
+		"axios": "^0.21.1",
+		"cron": "^1.8.2",
+		"dotenv": "^10.0.0",
+		"fb": "^2.0.0"
+	}
+}
