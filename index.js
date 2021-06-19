@@ -85,7 +85,7 @@ class Bot {
 			source: fs.createReadStream(`./image/result.${this.data.filetype}`),
 			message: this.data.title,
 		};
-		FB.setAccessToken(process.env.TEST_TOKEN);
+		FB.setAccessToken(process.env.TOKEN);
 		FB.api("me/photos", "POST", content, (res) => {
 			console.log(`Successfully posted image https://facebook.com/${res.post_id}`);
 			let comment = `Original post from https://reddit.com${this.data.permalink} \n(posted on r/blessedimages by u/${this.data.author})
