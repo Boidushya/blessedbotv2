@@ -13,10 +13,10 @@ class Bot {
 	}
 	containsObject(obj, list) {
 		let i;
-		for(i=0;i<list.length;i++){
-			if(list[i].id === obj.id){
-				return true
-			};
+		for (i = 0; i < list.length; i++) {
+			if (list[i].id === obj.id) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -43,8 +43,7 @@ class Bot {
 						.replace(/\s/g, "_"),
 					filetype: /(?:\.([^.]+))?$/g.exec(item.url)[1],
 				};
-				console.log(this.containsObject(this.data, this.database.completed));
-				if(this.containsObject(this.data, this.database.completed)){
+				if (this.containsObject(this.data, this.database.completed)) {
 					console.log(`Post already exists in database`);
 					return;
 				}
@@ -72,8 +71,9 @@ class Bot {
 							fs.createWriteStream(
 								`./image/result.${this.data.filetype}`
 							)
-						);
-						this.post();
+						).on("finish",()=>{
+							this.post();
+						});
 					});
 			})
 			.catch((err) => {
@@ -81,15 +81,49 @@ class Bot {
 			});
 	}
 	post() {
-		let comment = `Original post from https://reddit.com${this.data.permalink} posted on r/blessedimages by u/${this.data.author}
-		Beep Boop! This action was automatically performed with ❤️ by a 🤖.`;
+		let content = {
+			source: fs.createReadStream(`./image/result.${this.data.filetype}`),
+			message: this.data.title,
+		};
+		FB.setAccessToken(process.env.TEST_TOKEN);
+		FB.api("me/photos", "POST", content, (res) => {
+			console.log(`Successfully posted image https://facebook.com/${res.post_id}`);
+			let comment = `Original post from https://reddit.com${this.data.permalink} \n(posted on r/blessedimages by u/${this.data.author})
+			\nBeep Boop! This action was automatically performed with ❤️ by a 🤖.`;
+			FB.api(`${res.post_id}/comments`, "POST", {
+				message:comment
+			}, (response) => {
+				let data = {
+					created_at:Date(),
+					title: this.data.title,
+					post_id:res.post_id,
+					permalink:`https://facebook.com/${res.post_id}`,
+					comment:response.id
+				}
+				this.database.posts.push(data);
+				fs.writeFile(
+					"./database/db.json",
+					JSON.stringify(this.database),
+					{
+						encoding: "utf8",
+					},
+					(err) => {
+						if (err) {
+							console.log(
+								`Error in writing database to file ${err}`
+							);
+						}
+					}
+				);
+			})
+		});
 	}
 	start() {
 		this.main();
-		// const job = new CronJob("*/5 * * * * *", () => {
-		// 	this.fetchRedditData()
-		// });
-		// job.start();
+		const job = new CronJob("0 0 0 * * *", () => {
+			this.main();
+		});
+		job.start();
 	}
 }
 
